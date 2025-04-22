@@ -33,7 +33,7 @@ const HomePage = () => {
             placeholder='Cari menu...'
             className='w-full flex-1 border border-orange-400 rounded-lg bg-gray-100 pl-4'
           />
-          <Pressable className='bg-amber-500 px-3 py-3 rounded-xl'>
+          <Pressable className='bg-amber-500 px-3 py-3 rounded-xl' onPress={() => router.push('/product/cart')}>
             <Image source={require("@/assets/images/cart.png")} tintColor={"#ecf0f1"} className='size-8' />
           </Pressable>
         </View>
