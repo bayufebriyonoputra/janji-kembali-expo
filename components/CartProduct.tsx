@@ -2,6 +2,7 @@ import { View, Text, Image } from 'react-native'
 import React, { useState } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { Pressable } from 'react-native'
+import { formatRupiah } from '@/lib/formatRupiah'
 
 
 type CartItem = {
@@ -26,7 +27,8 @@ const CartProduct = ({ item, onRemove, onQtyChange}: CartProductProps) => {
             <Image className='rounded-md' resizeMode='cover' style={{ width: 100, height: 100 }} source={{ uri: item.image }} />
             <View className='px-4 flex-1'>
                 <Text className='font-bold text-lg'>{item.name}</Text>
-                <Text className='text-gray-700 font-semibold text-base mt-2'>Rp. {item.price}</Text>
+                <Text className='text-gray-700 font-semibold text-base mt-2'>{formatRupiah(item.price)}</Text>
+                <Text className='text-gray-700 font-semibold text-base mt-2'>Sub {formatRupiah(item.qty * item.price)}</Text>
             </View>
             <View className='justify-between items-end'>
                 <Pressable onPress={onRemove}>

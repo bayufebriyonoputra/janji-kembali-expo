@@ -7,9 +7,11 @@ import {format} from 'date-fns'
 interface DatePickerInputProps {
     value: Date;
     onChange: (date: Date) => void;
+    className?:string;
+    label?:string
 }
 
-const DatePickerInput = ({ value, onChange }: DatePickerInputProps) => {
+const DatePickerInput = ({ value, onChange, className, label }: DatePickerInputProps) => {
 
     const [showPicker, setShowPicker] = React.useState(false);
 
@@ -21,8 +23,8 @@ const DatePickerInput = ({ value, onChange }: DatePickerInputProps) => {
     }
 
     return (
-        <View className="p-4">
-            <Text className="text-black font-semibold mb-2">Select Date</Text>
+        <View className={className}>
+            <Text className="text-black font-semibold mb-2">{label ? label : 'Select Date'}</Text>
 
             <Pressable
                 className="border border-gray-300 rounded-lg p-3 bg-white shadow-sm"
