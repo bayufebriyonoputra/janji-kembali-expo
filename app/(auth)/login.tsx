@@ -1,35 +1,65 @@
 import { View, Text, TextInput, Pressable, Image } from 'react-native'
 import { useForm, Controller } from "react-hook-form";
-import React from 'react';
+import React, { useState } from 'react';
 import { yupResolver } from "@hookform/resolvers/yup";
 import { signInSchema, signInValues } from '@/validation/login';
 import { useRouter } from 'expo-router';
+import { API_BASE_URL } from '@/constants/config';
+import { saveToken } from '@/lib/secureStore';
+import ToastManager, { Toast } from 'toastify-react-native'
+
 
 
 const LoginPage = () => {
 
     const router = useRouter();
+    const [loading, setLoading] = useState(false);
     const { control, handleSubmit, formState: { errors } } = useForm({
         resolver: yupResolver(signInSchema),
-        defaultValues:{
-            email:"bayu.f.p.09@gmail.com",
-            password:"password"
+        defaultValues: {
+            email: "",
+            password: ""
         }
     })
 
-    const onSubmit = (data: signInValues) => {
-        router.dismissAll();
-        router.replace("/home");
+    const onSubmit = async (data: signInValues) => {
+        setLoading(true)
+        try {
+
+            const response = await fetch(`${API_BASE_URL}/login`, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.data?.access_token) {
+                await saveToken(result.data.access_token);
+                router.dismissAll();
+                router.replace("/home");
+            } else {
+                Toast.error('Login gagal!')
+            }
+        } catch (err: any) {
+            Toast.error('Terjadi kesalahan silahkan coba lagi!')
+        } finally {
+            setLoading(false)
+        }
+
     }
 
     return (
-      
+
+        <>
             <View className="flex-1 justify-center bg-gray-100 px-6">
                 <View className='items-center'>
                     <Image source={require('@/assets/images/img_janjikembali.png')} resizeMode='contain' />
                 </View>
                 <Text className="text-2xl font-black text-gray-900 mt-12">Masuk Menggunakan Akun Anda</Text>
-                
+
 
                 <View className="w-full bg-white p-6 rounded-2xl shadow-md mt-8">
                     {/* Email */}
@@ -76,7 +106,9 @@ const LoginPage = () => {
                     <Text className='mx-auto text-gray-600 font-light text-lg underline'>Create New Account</Text>
                 </Pressable>
             </View>
-        
+            <ToastManager />
+        </>
+
     )
 }
 
