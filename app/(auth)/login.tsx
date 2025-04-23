@@ -98,7 +98,12 @@ const LoginPage = () => {
 
                     {/* Continue Button */}
                     <Pressable onPress={handleSubmit(onSubmit)} className="bg-yellow-400 rounded-full py-3 items-center mt-12">
-                        <Text className="text-white font-semibold text-lg">Continue</Text>
+                        {loading ? (
+                            <Image source={require("@/assets/images/loading.png")} className='size-7 animate-spin' tintColor={"#FFFFFF"} />
+                        ) :
+                            (
+                                <Text className="text-white font-semibold text-lg">Continue</Text>
+                            )}
                     </Pressable>
                 </View>
 

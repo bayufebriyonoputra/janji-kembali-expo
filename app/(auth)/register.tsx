@@ -1,24 +1,54 @@
 import { View, Text, TextInput, Pressable, Image, ScrollView } from 'react-native'
 import { useForm, Controller } from "react-hook-form";
-import React from 'react';
+import React, { useState } from 'react';
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { signUpFormData, signUpSchema } from '@/validation/register';
 import { useRouter } from 'expo-router';
+import ToastManager, { Toast } from 'toastify-react-native'
+import { API_BASE_URL } from '@/constants/config';
+import { saveToken } from '@/lib/secureStore';
 
 
 const RegisterPage = () => {
 
     const router = useRouter();
+    const [loading, setLoading] = useState(false);
     const { control, handleSubmit, formState: { errors } } = useForm({
         resolver: yupResolver(signUpSchema),
     })
 
-    const onSubmit = (data: signUpFormData) => {
+    const onSubmit = async (data: signUpFormData) => {
+        setLoading(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/register`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+
+            if (response.ok && result.data?.token) {
+                await saveToken(result.data.token);
+                router.dismissAll();
+                router.push('/home');
+            } else {
+                Toast.error("Terjadi kesalahan!")
+            }
+
+        } catch (error) {
+            Toast.error("Terjadi kesalahan!")
+        } finally {
+            setLoading(false)
+        }
+
     }
 
     return (
-      
+
+        <>
             <View className="flex-1 justify-center bg-gray-100 px-6">
                 <View className='items-center'>
                     <Image source={require('@/assets/images/img_janjikembali.png')} resizeMode='contain' />
@@ -79,7 +109,11 @@ const RegisterPage = () => {
 
                     {/* Continue Button */}
                     <Pressable onPress={handleSubmit(onSubmit)} className="bg-yellow-400 rounded-full py-3 items-center mt-12">
-                        <Text className="text-white font-semibold text-lg">Continue</Text>
+                        {loading ? (
+                            <Image source={require("@/assets/images/loading.png")} className='size-8 animate-spin' tintColor={"#FFFFFF"} />
+                        ) : (
+                            <Text className="text-white font-semibold text-lg">Continue</Text>
+                        )}
                     </Pressable>
                 </View>
 
@@ -87,7 +121,9 @@ const RegisterPage = () => {
                     <Text className='mx-auto text-gray-600 font-light text-lg underline'>Sign In</Text>
                 </Pressable>
             </View>
-        
+            <ToastManager />
+        </>
+
     )
 }
 
