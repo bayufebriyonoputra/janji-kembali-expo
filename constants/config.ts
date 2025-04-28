@@ -1,1 +1,1 @@
-export const API_BASE_URL = 'https://7003-103-169-187-46.ngrok-free.app/api';
+export const API_BASE_URL = 'https://rnbij-180-247-235-2.a.free.pinggy.link/api';

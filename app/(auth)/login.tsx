@@ -44,7 +44,7 @@ const LoginPage = () => {
                 Toast.error('Login gagal!')
             }
         } catch (err: any) {
-            Toast.error('Terjadi kesalahan silahkan coba lagi!')
+            Toast.error('Terjadi kesalahan silahkan coba lagi!');
         } finally {
             setLoading(false)
         }

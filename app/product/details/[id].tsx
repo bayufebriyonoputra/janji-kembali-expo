@@ -68,10 +68,8 @@ const DetailPage = () => {
     const loadCartItems = async () => {
       try {
         const jsonValue = await AsyncStorage.getItem('@cart_items');
-        console.log(jsonValue);
-
+        
         if (jsonValue != null) {
-          console.log('parsed:', JSON.parse(jsonValue));
           setCartItems(JSON.parse(jsonValue) as CartItem[]);
         }
       } catch (e) {
