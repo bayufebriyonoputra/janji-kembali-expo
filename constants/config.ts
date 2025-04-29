@@ -1,1 +1,1 @@
-export const API_BASE_URL = 'https://rnbij-180-247-235-2.a.free.pinggy.link/api';
+export const API_BASE_URL = 'https://rnbnf-103-169-187-46.a.free.pinggy.link/api';
