@@ -4,15 +4,14 @@ import Carousel from "react-native-reanimated-carousel";
 import { useSharedValue } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { API_BASE_URL } from '@/constants/config';
-import { ProductResponse, ResponseApi } from '@/types/responseApi';
+import { BannerResponse, ProductResponse, ResponseApi } from '@/types/responseApi';
 import MenuCard from '@/components/MenuCard';
 
 
-const data: { id: number, image: string }[] = [
-  { id: 1, image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRkNCo7OHXCi5o1jkKUw3qOg3bozTAZpBUTNg&s" },
-  { id: 2, image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTAbrxMVS8J1FADMRspm6i3gvtY_4zAuAZ7tA&s" },
-  { id: 3, image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwyaljGdPg-Ysjkebu4bqW_1U21ZxUMAc6Ccq8ieeC4GWKfWyOyCyRU1vHcSMlz5s88_M&usqp=CAU" }
-];
+
+
+
+
 
 const { width } = Dimensions.get("window");
 
@@ -22,21 +21,31 @@ const HomePage = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [loadingProduct, setLoadingProduct] = useState(false);
   const [product, setProduct] = useState<ProductResponse[]>([]);
+  const [banner, setBanner] = useState<BannerResponse[]>([]);
+
 
 
   useEffect(() => {
-
     const fetchData = async () => {
       try {
         setLoadingProduct(true);
 
+        // Get Product
         const response = await fetch(`${API_BASE_URL}/products?take=6`, {
           method: "GET",
           cache: 'no-store'
         });
         const result = await response.json() as ResponseApi<ProductResponse>;
         setProduct(result.data);
-      } catch (error) {
+        
+        const bannerResponse = await fetch(`${API_BASE_URL}/banners`, {
+          method: "GET",
+          cache: "no-store"
+        });
+        const bannerResult = await bannerResponse.json() as ResponseApi<BannerResponse>
+        setBanner(bannerResult.data);
+      } catch (error:any) {
+     
 
       } finally {
         setLoadingProduct(false);
@@ -88,31 +97,37 @@ const HomePage = () => {
 
             {/* Carousel */}
             <View className='mt-8'>
-              <Carousel
-                loop
-                width={width * 0.9}
-                height={200}
-                autoPlay
-                data={data}
-                scrollAnimationDuration={1000}
-                onSnapToItem={(index) => {
-                  setActiveIndex(index);
-                }}
-                renderItem={({ item }) => (
-                  <View className='px-4'>
-                    <Image
-                      source={{ uri: item.image }}
-                      style={{ width: "100%", height: "100%", borderRadius: 15 }}
-                      resizeMode="cover"
-                    />
-                  </View>
-                )}
-              />
+              {banner.length > 0 ? (
+                <Carousel
+                  loop
+                  width={width * 0.9}
+                  height={200}
+                  autoPlay
+                  data={banner}
+                  scrollAnimationDuration={1000}
+                  onSnapToItem={(index) => {
+                    setActiveIndex(index);
+                  }}
+                  renderItem={({ item }) => (
+                    <View className='px-4'>
+                      <Image
+                        source={{ uri: item.image }} 
+                        style={{ width: "100%", height: "100%", borderRadius: 15 }}
+                        resizeMode="cover"
+                      />
+                    </View>
+                  )}
+                />
+              ) : (
+                <>
+                  <Text>Tidak ada data banner</Text>
+                </>
+              )}
             </View>
 
             {/* Dot indicator */}
             <View className='mt-6 flex-row justify-center items-center'>
-              {data.map((_, index) => (
+              {banner.map((_, index) => (
                 <View
                   key={index}
                   style={{

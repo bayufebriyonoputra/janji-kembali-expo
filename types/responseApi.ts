@@ -20,3 +20,11 @@ export interface SingleResponseApi<T> {
     message: string;
     data: T;
 }
+
+export interface BannerResponse {
+    id: number;
+    name: string;
+    image: string;
+    created_at: string;
+    updated_at: string;
+  }
