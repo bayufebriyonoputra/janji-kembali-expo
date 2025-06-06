@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { formatRupiah } from '@/lib/formatRupiah'
 import { PaymentChanel, PaymentChanlelData } from '@/types/tripay'
 import { TRIPAY_API_KEY } from '@/constants/config'
+import { usePaymentStore } from '@/stores/paymentStore'
 
 
 
@@ -11,7 +12,11 @@ const PaymentMethods = ({ totalHarga }: { totalHarga: number }) => {
 
     const [paymentChanel, setPaymentChanel] = useState<PaymentChanlelData[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
-    const [selectedMethod, setSelectedMethod] = useState<string>("");
+
+    const payment = usePaymentStore(state => state.payment);
+    const setPayment = usePaymentStore(state => state.setPayment);
+
+
 
 
     // fetch payment chanels pertama kali
@@ -60,7 +65,7 @@ const PaymentMethods = ({ totalHarga }: { totalHarga: number }) => {
                         const fee = Number(item.total_fee.flat || 0) + (Number(item.total_fee.percent || 0) / 100) * totalHarga;
 
                         return (
-                            <Pressable onPress={() => setSelectedMethod(item.code)} className={`w-44 bg-white rounded-md px-2 py-4 flex-row gap-2 items-center ${selectedMethod === item.code ? 'border-2 border-amber-500' : ''}`}>
+                            <Pressable key={item.code} onPress={() => setPayment(item.code)} className={`w-44 bg-white rounded-md px-2 py-4 flex-row gap-2 items-center ${payment === item.code ? 'border-2 border-amber-500' : ''}`}>
                                 <Image resizeMode='contain' className='size-10' source={{ uri: item.icon_url }} />
                                 <View className='ml-2'>
                                     <Text className='mt-2'>{item.code}</Text>

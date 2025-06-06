@@ -12,6 +12,7 @@ import { API_BASE_URL } from '@/constants/config';
 import { getToken } from '@/lib/secureStore';
 import { Picker } from "@react-native-picker/picker";
 import PaymentMethods from '@/components/PaymentMethods';
+import { usePaymentStore } from '@/stores/paymentStore';
 
 
 const Cart = () => {
@@ -19,7 +20,8 @@ const Cart = () => {
     const [isTunai, setIsTunasi] = React.useState(true);
     const [isDinein, setIsDinein] = React.useState(true);
     const [loading, setLoading] = React.useState(false);
-    const [metodeNonTunai, setMetodeNonTunai] = React.useState<string>('');
+    
+    const payment = usePaymentStore(state => state.payment);
 
 
     const [date, setDate] = React.useState<Date>(new Date());
@@ -74,7 +76,7 @@ const Cart = () => {
             setLoading(true);
             const data = {
                 tgl_order: format(new Date(), "yyyy-MM-dd"),
-                jenis_pembayaran: isTunai ? "tunai" : "non tunai",
+                jenis_pembayaran: isTunai ? "tunai" : payment,
                 detail: cartItems.map(({ id, image, name, ...rest }) => ({
                     product_id: id,
                     ...rest
