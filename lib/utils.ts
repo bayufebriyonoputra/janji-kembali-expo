@@ -1,7 +1,7 @@
-import crypto from 'crypto';
+import CryptoJS from 'crypto-js';
 
 
-function generateTripayCloseSignature({
+export function generateTripayCloseSignature({
     merchantCode,
     merchantRef,
     amount,
@@ -14,5 +14,6 @@ function generateTripayCloseSignature({
 }) {
     const data = merchantCode + merchantRef + amount.toString();
 
-    return crypto.createHmac('sha256', secretKey).update(data).digest('hex');
+   const signature = CryptoJS.HmacSHA256(data, secretKey).toString(CryptoJS.enc.Hex);
+    return signature;
 }

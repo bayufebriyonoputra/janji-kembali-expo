@@ -4,15 +4,17 @@ import CartProduct from '@/components/CartProduct';
 import { Ionicons } from '@expo/vector-icons';
 import { formatRupiah } from '@/lib/formatRupiah';
 import { CartItem } from '@/types/cart';
-import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { format } from 'date-fns';
 import ToastManager, { Toast } from 'toastify-react-native'
-import { API_BASE_URL } from '@/constants/config';
+import { API_BASE_URL, TRIPAY_API_KEY, TRIPAY_MERCHANT_CODE, TRIPAY_PRIVATE_KEY } from '@/constants/config';
 import { getToken } from '@/lib/secureStore';
-import { Picker } from "@react-native-picker/picker";
 import PaymentMethods from '@/components/PaymentMethods';
-import { usePaymentStore } from '@/stores/paymentStore';
+import { usePaymentStore, useTotalStore } from '@/stores/paymentStore';
+import { useUserInfo } from '@/hooks/useUserInfo';
+import { generateTripayCloseSignature } from '@/lib/utils';
+import { TripayOrder } from '@/types/tripayOrder';
+import { useRouter } from 'expo-router';
 
 
 const Cart = () => {
@@ -20,9 +22,12 @@ const Cart = () => {
     const [isTunai, setIsTunasi] = React.useState(true);
     const [isDinein, setIsDinein] = React.useState(true);
     const [loading, setLoading] = React.useState(false);
-    
-    const payment = usePaymentStore(state => state.payment);
+    const { user } = useUserInfo(`${API_BASE_URL}/me`);
+    const router = useRouter();
 
+    const payment = usePaymentStore(state => state.payment);
+    const total = useTotalStore(state => state.total);
+    const setTotal = useTotalStore(state => state.setTotal);
 
     const [date, setDate] = React.useState<Date>(new Date());
 
@@ -41,6 +46,7 @@ const Cart = () => {
         setCartItems(prev => prev.filter(item => item.id !== id));
     }
 
+    // Saat pertama kali render, ambil data dari AsyncStorage
     useEffect(() => {
         const loadCartItems = async () => {
             try {
@@ -56,6 +62,11 @@ const Cart = () => {
         loadCartItems();
     }, []);
 
+    // set total jika totalharga berubah
+    useEffect(() => {
+        setTotal(totalHarga);
+    }, [totalHarga])
+
     useEffect(() => {
         const saveCartItems = async () => {
             try {
@@ -67,6 +78,63 @@ const Cart = () => {
         saveCartItems();
     }, [cartItems])
 
+    const orderTripay = async (order_ref: string) => {
+
+        const signature = generateTripayCloseSignature({
+                amount: total,
+                merchantCode: TRIPAY_MERCHANT_CODE,
+                merchantRef: order_ref,
+                secretKey: TRIPAY_PRIVATE_KEY
+            });
+
+                
+
+        const data = {
+            method: payment,
+            merchant_ref: order_ref,
+            amount: total,
+            customer_name: user?.fullname || "Anonymous",
+            customer_email: user?.email || "",
+            order_items: cartItems.map(item => ({
+                sku: item.id,
+                name: item.name,
+                price: item.price,
+                quantity: item.qty
+            })),
+            signature: generateTripayCloseSignature({
+                amount: total,
+                merchantCode: TRIPAY_MERCHANT_CODE,
+                merchantRef: order_ref,
+                secretKey: TRIPAY_PRIVATE_KEY
+            })
+        }
+
+        try {
+            const res = await fetch("https://tripay.co.id/api-sandbox/transaction/create", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${TRIPAY_API_KEY}`
+                    , "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+
+            });
+
+            if (res.ok) {
+                const json: TripayOrder = await res.json();
+                const url = json.data.checkout_url;
+
+                router.push({ pathname: '/product/payment/[url]/[ref]', params: { url: encodeURIComponent(url), ref:json.data.reference } });
+
+            } else {
+                const errorData = await res.json();
+                Toast.error("Terjadi kesalahan saat membuat transaksi di Tripay");
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+
     // Handle orders
     const handleOrder = async () => {
         if (cartItems.length <= 0) {
@@ -74,8 +142,11 @@ const Cart = () => {
         }
         try {
             setLoading(true);
+            const ref = `order-${format(new Date(), "yyyyMMddHHmmss")}`;
+
             const data = {
                 tgl_order: format(new Date(), "yyyy-MM-dd"),
+                order_ref: ref,
                 jenis_pembayaran: isTunai ? "tunai" : payment,
                 detail: cartItems.map(({ id, image, name, ...rest }) => ({
                     product_id: id,
@@ -83,7 +154,7 @@ const Cart = () => {
                 })),
             };
 
-            console.log('data:', data);
+            // set data local
             const token = await getToken();
             if (!token) Toast.error("Terjadi kesalahan silahkan relogin");
 
@@ -96,12 +167,21 @@ const Cart = () => {
                 body: JSON.stringify(data)
             });
             const result = await response.json();
-            console.log(result);
+
+
+            //insert into tripay
+
+
 
             if (response.ok) {
                 await AsyncStorage.removeItem("@cart_items");
                 setCartItems([]);
-                Toast.success("Order berhasil silahkan bayar di kasir");
+                if (isTunai) {
+
+                    Toast.success("Order berhasil silahkan bayar di kasir");
+                } else {
+                    orderTripay(ref);
+                }
             }
         } catch (error: any) {
             console.log(error.message);
@@ -215,7 +295,7 @@ const Cart = () => {
                 <View className='flex-row h-20 bg-white p-0 w-full absolute bottom-0'>
                     <View className='px-8 pt-2 flex-1'>
                         <Text className='font-black text-2xl'>Total Pesanan</Text>
-                        <Text className='text-gray-700 font-bold text-xl'>{formatRupiah(totalHarga)}</Text>
+                        <Text className='text-gray-700 font-bold text-xl'>{formatRupiah(total)}</Text>
                     </View>
 
                     <Pressable className='h-full bg-amber-500 justify-center px-6' onPress={handleOrder}>
