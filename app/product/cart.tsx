@@ -2,7 +2,6 @@ import { View, Text, ScrollView, Pressable, Image } from 'react-native'
 import React, { useEffect } from 'react';
 import CartProduct from '@/components/CartProduct';
 import { Ionicons } from '@expo/vector-icons';
-import DatePickerInput from '@/components/DatePickerInput';
 import { formatRupiah } from '@/lib/formatRupiah';
 import { CartItem } from '@/types/cart';
 import { useFocusEffect } from '@react-navigation/native';
@@ -11,6 +10,8 @@ import { format } from 'date-fns';
 import ToastManager, { Toast } from 'toastify-react-native'
 import { API_BASE_URL } from '@/constants/config';
 import { getToken } from '@/lib/secureStore';
+import { Picker } from "@react-native-picker/picker";
+import PaymentMethods from '@/components/PaymentMethods';
 
 
 const Cart = () => {
@@ -18,6 +19,8 @@ const Cart = () => {
     const [isTunai, setIsTunasi] = React.useState(true);
     const [isDinein, setIsDinein] = React.useState(true);
     const [loading, setLoading] = React.useState(false);
+    const [metodeNonTunai, setMetodeNonTunai] = React.useState<string>('');
+
 
     const [date, setDate] = React.useState<Date>(new Date());
 
@@ -71,6 +74,7 @@ const Cart = () => {
             setLoading(true);
             const data = {
                 tgl_order: format(new Date(), "yyyy-MM-dd"),
+                jenis_pembayaran: isTunai ? "tunai" : "non tunai",
                 detail: cartItems.map(({ id, image, name, ...rest }) => ({
                     product_id: id,
                     ...rest
@@ -127,9 +131,9 @@ const Cart = () => {
                                 {/* Item metode */}
                                 <View className=' rounded-xl bg-white px-4 mt-4 android:elevation-lg '>
                                     <Text className='my-3 text-gray-400 text-xs'>Pilih Metode Pembayaran</Text>
-                                    <View className='flex-row justify-center gap-2 pb-4'>
+                                    <View className='flex-row justify-center gap-2 pb-4 '>
                                         <Pressable onPress={() => setIsTunasi(false)}>
-                                            <View className={`${isTunai ? '' : 'bg-amber-500'} w-44 px-4 py-2 border-[0.5px] rounded-md border-gray-500 items-center`}>
+                                            <View className={`${isTunai ? '' : 'bg-amber-500'} ml-4 w-40 px-4 py-2 border-[0.5px] rounded-md border-gray-500 items-center`}>
                                                 <View className={`flex-row gap-2 items-center`}>
                                                     <Ionicons name='card-outline' size={20} color={isTunai ? 'black' : 'white'} />
                                                     <Text className={`${isTunai ? '' : 'text-white'}`}>Non Tunai</Text>
@@ -138,7 +142,7 @@ const Cart = () => {
                                         </Pressable>
 
                                         <Pressable onPress={() => setIsTunasi(true)}>
-                                            <View className={`${isTunai ? 'bg-amber-500' : ''} w-44 px-4 py-2 border-[0.5px] rounded-md border-gray-500 items-center`}>
+                                            <View className={`${isTunai ? 'bg-amber-500' : ''} w-40 mr-4 px-4 py-2 border-[0.5px] rounded-md border-gray-500 items-center`}>
                                                 <View className={`flex-row gap-2 items-center`}>
                                                     <Ionicons name='cash-outline' size={20} color={isTunai ? 'white' : 'black'} />
                                                     <Text className={`${isTunai ? 'text-white' : ''}`}>Tunai</Text>
@@ -149,20 +153,36 @@ const Cart = () => {
 
                                 </View>
 
+                                {/* Item metode non tunai */}
+                                {!isTunai && (
+                                    // <View className="mt-4">
+                                    //     <Text className="mb-2 text-gray-500">Pilih Pembayaran</Text>
+                                    //     <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 8 }}>
+                                    //         <Picker
+                                    //             selectedValue={metodeNonTunai}
+                                    //             onValueChange={(itemValue) => setMetodeNonTunai(itemValue)}
+                                    //         >
+                                    //             <Picker.Item label="Pilih Metode..." value="" />
+                                    //             <Picker.Item label="BRI" value="1" />
+                                    //             <Picker.Item label="Mandiri" value="2" />
+                                    //             <Picker.Item label="Q RIS" value="3" />
+                                    //             {/* Tambahkan opsi meja sesuai kebutuhan */}
+                                    //         </Picker>
+                                    //     </View>
+                                    // </View>
 
-                                <DatePickerInput
-                                    label='Pilih Tanggal dan Waktu'
-                                    className='mt-4'
-                                    value={date}
-                                    onChange={(val) => setDate(val)}
-                                />
+                                    <PaymentMethods totalHarga={totalHarga} />
+                                )}
+
+
+
 
                                 {/* Item Dine in */}
                                 <View className=' rounded-xl bg-white px-4 mt-4 android:elevation-lg '>
                                     <Text className='my-3 text-gray-400 text-xs'>Dine In / Take a Way</Text>
                                     <View className='flex-row justify-center gap-2 pb-4'>
                                         <Pressable onPress={() => setIsDinein(true)}>
-                                            <View className={`${isDinein ? 'bg-amber-500' : ''} w-44 px-4 py-2 border-[0.5px] rounded-md border-gray-500 items-center`}>
+                                            <View className={`${isDinein ? 'bg-amber-500' : ''} w-40 ml-4 px-4 py-2 border-[0.5px] rounded-md border-gray-500 items-center`}>
                                                 <View className={`flex-row gap-2 items-center`}>
                                                     <Ionicons name='restaurant-outline' size={20} color={isDinein ? 'white' : 'black'} />
                                                     <Text className={`${isDinein ? 'text-white' : ''}`}>Dine In</Text>
@@ -171,7 +191,7 @@ const Cart = () => {
                                         </Pressable>
 
                                         <Pressable onPress={() => setIsDinein(false)}>
-                                            <View className={`${isDinein ? '' : 'bg-amber-500'} w-44 px-4 py-2 border-[0.5px] rounded-md border-gray-500 items-center`}>
+                                            <View className={`${isDinein ? '' : 'bg-amber-500'} w-40 mr-4 px-4 py-2 border-[0.5px] rounded-md border-gray-500 items-center`}>
                                                 <View className={`flex-row gap-2 items-center`}>
                                                     <Ionicons name='cube-outline' size={20} color={isDinein ? 'black' : 'white'} />
                                                     <Text className={`${isDinein ? '' : 'text-white'}`}>Take a Way</Text>
@@ -181,6 +201,8 @@ const Cart = () => {
                                     </View>
 
                                 </View>
+
+
                             </>
                         ) : (
                             <Text className='text-center mt-4'>Anda belum order apapun :(</Text>
@@ -198,7 +220,7 @@ const Cart = () => {
                         <View className='flex-row gap-3'>
                             {loading ? (
                                 <>
-                                <Image source={require("@/assets/images/loading.png")} tintColor={"#FFFFFF"} className='size-6 animate-spin'/>
+                                    <Image source={require("@/assets/images/loading.png")} tintColor={"#FFFFFF"} className='size-6 animate-spin' />
                                 </>
                             ) : (
                                 <>
